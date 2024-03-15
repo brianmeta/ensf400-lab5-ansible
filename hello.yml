@@ -49,3 +49,6 @@
     command: forever start /node-app/app.js
     when: "forever_list.stdout.find('/node-app/app.js') == -1"
 
+# Third play
+- import_playbook: ./nginx-configs/nginx-playbook.yml
+
