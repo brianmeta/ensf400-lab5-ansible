@@ -1,8 +1,8 @@
 # First Play
-- name: Play - Handle Files in all hosts
-  hosts: all
+- name: Play - Handle Files in app_group hosts
+  hosts: app_group
   tasks:
-  - name: all host are identified with a file
+  - name: app_group hosts are identified with a file
     copy:
       content: My family is {{ ansible_os_family }}
       dest: /family.txt
@@ -48,4 +48,37 @@
   - name: Start example Node.js app.
     command: forever start /node-app/app.js
     when: "forever_list.stdout.find('/node-app/app.js') == -1"
+
+# Third play
+- name: Play - Install and configure Nginx as a LoadBalancer
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Update cache
+      apt: update_cache=yes
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: latest
+      become: yes
+    - name: Copy the Nginx config file to /etc/nginx/sites-available
+      copy:
+        src: ./nginx.cfg        
+        dest: /etc/nginx/sites-available/nginx.cfg
+      become: yes
+    - name: Create symlink of the config file at /etc/nginx/sites-enabled
+      file:
+        src: /etc/nginx/sites-available/nginx.cfg
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+      become: yes
+    - name: Restart nginx to apply changes
+      service:        
+        name: nginx        
+        state: restarted      
+      become: yes
+      register: server_status
+    - name: Check if Nginx is succesfully installed and running
+      debug:
+        msg: "{{server_status}}"
 
