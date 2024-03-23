@@ -1,43 +1,47 @@
-# Get the inventory file
-# for each host:
-# print the names, IP, groups
-# Ping all hosts
-
 import ansible_runner
+import json
+import os
 
 if __name__ == "__main__":
+    
     # Get ansible inventory information
     output, error = ansible_runner.get_inventory(
         action="list",
         inventories=["./hosts.yml"],
-        response_format="json"
+        response_format="json",
+        quiet=True                                      # Disable the output from Ansible API
     )
-    print("out: {}".format(output))
-    print("err: {}".format(error))
+    
+    filtered_data = {}
 
-    # Export ports and check the list of hosts -- not an ansible command so it will not work, need to use os or subprocess
-    # out, err, rc = ansible_runner.run_command(
-    #     executable_cmd='export',
-    #     cmdline_args=['ANSIBLE_CONFIG=$(pwd)/ansible.cfg'],
-    # )
-    # print("rc: {}".format(rc))
-    # print("out: {}".format(out))
-    # print("err: {}".format(err))
+    # Get all hosts and their IP address
+    for host in output["_meta"]["hostvars"].keys():
+        if host == "localhost":
+            filtered_data[host] = {
+                "IP address":"local",
+                "groups": []
+            }
+        else:
+            filtered_data[host] = {
+                "IP address":output["_meta"]["hostvars"][host]["ansible_host"],
+                "groups": []
+            }
 
-    # Export ports and check the list of hosts
-    out, err, rc = ansible_runner.run_command(
-        executable_cmd='ansible',
-        cmdline_args=['all:localhost', '--list-hosts'],
-    )
-    # print("rc: {}".format(rc))
-    # print("out: {}".format(out))
-    # print("err: {}".format(err))
+    # Get the groups each host belongs to
+    for group in output["all"]["children"]:
+        if group != "ungrouped":
+            for host in output[group]["hosts"]:
+                filtered_data[host]["groups"].append(group)
 
+    print(json.dumps(filtered_data, indent=4))
+
+    print("\nPinging all hosts")
+    print("="*30 + "\n")
     # Ping all hosts
     out, err, rc = ansible_runner.run_command(
+        envvars = {
+            "ANSIBLE_CONFIG": "./ansible.cfg"
+        },
         executable_cmd='ansible',
         cmdline_args=['all:localhost', '-m', 'ping'],
     )
-    # print("rc: {}".format(rc))
-    # print("out: {}".format(out))
-    # print("err: {}".format(err))
