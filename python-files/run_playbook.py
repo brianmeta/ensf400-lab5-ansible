@@ -15,6 +15,6 @@ if __name__ == "__main__":
     print("="*30)
 
     # Check if the loadbalancer is working correctly
-    for i in range(5):
+    for i in range(6):
         subprocess.run(['curl', 'http://0.0.0.0'], check=True, text=True)
         print()

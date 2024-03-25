@@ -3,5 +3,5 @@
   hosts: localhost
   become: yes
   tasks: 
-    - name: Unnstall Nginx
+    - name: Uninstall Nginx
       apt: name=nginx state=absent
