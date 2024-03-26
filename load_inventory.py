@@ -6,7 +6,6 @@
 
 import ansible_runner
 import json
-import os
 
 if __name__ == "__main__":
     
